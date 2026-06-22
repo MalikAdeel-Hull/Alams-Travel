@@ -247,8 +247,8 @@
   .wa-float .wa-label{line-height:1}
 
   @media (max-width:860px){
-    .nav-links{position:fixed;top:66px;left:0;right:0;height:calc(100vh - 66px);height:calc(100dvh - 66px);overflow-y:auto;background:#0a2039;flex-direction:column;align-items:stretch;gap:2px;padding:14px 18px 24px;border-bottom:1px solid rgba(255,255,255,.12);transform:translateY(-100%);transition:transform .3s ease;box-shadow:0 16px 30px rgba(0,0,0,.3)}
-    .nav-links.open{transform:translateY(0)}
+    .nav-links{position:fixed;top:66px;left:0;right:0;height:calc(100vh - 66px);height:calc(100dvh - 66px);overflow-y:auto;background:#0a2039;flex-direction:column;align-items:stretch;gap:2px;padding:14px 18px 24px;border-bottom:1px solid rgba(255,255,255,.12);transform:translateY(-100%);visibility:hidden;transition:transform .3s ease,visibility 0s linear .3s;box-shadow:0 16px 30px rgba(0,0,0,.3)}
+    .nav-links.open{transform:translateY(0);visibility:visible;transition:transform .3s ease,visibility 0s}
     .nav-links a{padding:13px 12px;font-size:15px;border-radius:10px}
     .nav-toggle{display:flex}
     .nav-wa span.full{display:none}
