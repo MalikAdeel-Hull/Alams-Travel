@@ -385,6 +385,46 @@
   }
 })();
 
+// ── Nav scroll-spy: highlight the link for the section in view ───────────────
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.nav-links a'));
+  if (!links.length || !('IntersectionObserver' in window)) return;
+
+  var map = {};
+  var sections = [];
+  links.forEach(function(a){
+    var id = (a.getAttribute('href') || '').replace('#', '');
+    var sec = id && document.getElementById(id);
+    if (sec) { map[id] = a; sections.push(sec); }
+  });
+
+  function setActive(id){
+    links.forEach(function(a){ a.classList.remove('active'); });
+    if (map[id]) map[id].classList.add('active');
+  }
+
+  var visible = {};
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      visible[e.target.id] = e.isIntersecting ? e.intersectionRatio : 0;
+    });
+    var best = null, bestRatio = 0;
+    Object.keys(visible).forEach(function(id){
+      if (visible[id] > bestRatio) { bestRatio = visible[id]; best = id; }
+    });
+    if (best) setActive(best);
+  }, { rootMargin: '-45% 0px -45% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
+
+  sections.forEach(function(s){ observer.observe(s); });
+
+  // Immediate feedback on click
+  links.forEach(function(a){
+    a.addEventListener('click', function(){
+      setActive((a.getAttribute('href') || '').replace('#', ''));
+    });
+  });
+})();
+
 // ── Booking type tabs ────────────────────────────────────────────────────────
 (function(){
   var tabs = document.querySelectorAll('.btab');
