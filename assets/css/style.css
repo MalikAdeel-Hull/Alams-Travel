@@ -22,16 +22,20 @@
 
 :root{
     --navy:#0c2747;
-    --gold:#f5a623;
-    --gold-l:#ffc24d;
+    --gold:#f5a623;        /* bright gold — fills, icons, CTAs only */
+    --gold-l:#ffc24d;      /* light gold — accents on navy */
+    --gold-d:#9a5f0c;      /* deep gold — text on light backgrounds (AA) */
     --cream:#f6efe1;
-    --muted:#9a9180;
-    --muted2:#8a8170;
+    --muted:#7a715f;
+    --muted2:#6b6253;
     --amber-bg:#ffedc4;
-    --amber-text:#9c6a12;
+    --amber-text:#8a5d0e;
     --input-bg:#f6f3ec;
     --border:rgba(12,39,71,.1);
     --border2:rgba(12,39,71,.08);
+    --error:#c23b32;
+    --error-bg:#fdecea;
+    --success:#1a8a45;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
@@ -64,13 +68,13 @@
   .brand{display:flex;align-items:center;gap:11px}
   .brand-mark{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-l));display:flex;align-items:center;justify-content:center;color:var(--navy);font-family:'Anton';font-size:23px;box-shadow:0 5px 16px rgba(245,166,35,.45)}
   .brand-name{font-weight:900;font-size:22px;letter-spacing:-.01em;line-height:1;color:var(--navy);white-space:nowrap}
-  .brand-name b{color:var(--gold);font-weight:900}
+  .brand-name b{color:var(--gold-d);font-weight:900}
   .brand-name small{display:block;font-weight:700;font-size:9px;letter-spacing:.3em;color:var(--muted);margin-top:4px;white-space:nowrap}
   .heroA-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .top-cta{display:flex;align-items:center;gap:10px;background:var(--navy);color:#fff;padding:11px 18px;border-radius:999px;font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
   .top-cta b{color:var(--gold-l);font-weight:800}
   .top-cta .ph{width:26px;height:26px;border-radius:50%;background:var(--gold);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:14px}
-  .bigword{font-family:'Anton';font-weight:400;text-transform:uppercase;color:var(--gold);line-height:.84;letter-spacing:.01em}
+  .bigword{font-family:'Anton';font-weight:400;text-transform:uppercase;color:var(--gold-d);line-height:.84;letter-spacing:.01em}
   .heroA-head{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:4px}
   .kicker{font-weight:800;letter-spacing:.05em;font-size:32px;color:var(--navy);line-height:1;white-space:nowrap}
   .heroA .bigword{font-size:88px;line-height:.92;padding-top:2px;text-shadow:0 3px 0 rgba(12,39,71,.07);transition:opacity .26s ease,font-size .26s ease;white-space:nowrap}
@@ -100,19 +104,19 @@
   .sec-title{margin:0;font-weight:800;font-size:30px;letter-spacing:-.01em;color:var(--navy);max-width:560px;line-height:1.25}
   .sec-sub{font-size:15px;color:var(--muted2);max-width:480px;line-height:1.55}
   .card{background:#fff;border:1px solid var(--border2);border-radius:16px;box-shadow:0 16px 36px rgba(12,39,71,.1);padding:28px}
-  .card-label{font-weight:800;letter-spacing:.08em;font-size:12px;color:var(--gold);text-transform:uppercase;margin-bottom:4px}
+  .card-label{font-weight:800;letter-spacing:.08em;font-size:12px;color:var(--gold-d);text-transform:uppercase;margin-bottom:4px}
   .card-title{font-weight:800;font-size:20px;color:var(--navy);margin-bottom:20px}
   .vehicles{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
   .vcard{position:relative;border:1.5px solid var(--border);background:var(--input-bg);border-radius:12px;padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:6px;text-align:left}
   .vcard.active{border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(245,166,35,.18)}
   .vcard .vname{font-weight:800;font-size:15px;color:var(--navy)}
   .vcard .vmeta{font-size:12px;color:var(--muted2);font-weight:600}
-  .vcard .vfrom{font-weight:800;font-size:13px;color:var(--gold)}
+  .vcard .vfrom{font-weight:800;font-size:13px;color:var(--gold-d)}
   .vcard input{position:absolute;opacity:0}
   .price-out{margin-top:22px;border-top:1px dashed var(--border);padding-top:20px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;border-radius:12px}
   .price-out.pulse{animation:pulseRing 1.2s ease-out}
   @keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(245,166,35,.45)}100%{box-shadow:0 0 0 16px rgba(245,166,35,0)}}
-  .price-num{font-family:'Anton';font-weight:400;font-size:46px;color:var(--gold);line-height:1}
+  .price-num{font-family:'Anton';font-weight:400;font-size:46px;color:var(--gold-d);line-height:1}
   .price-num small{font-family:'Archivo';font-weight:800;font-size:15px;color:var(--navy);margin-right:4px}
   .price-break{font-size:13px;color:var(--muted2);font-weight:600;margin-top:6px}
   .warn{font-size:12px;color:var(--amber-text);font-weight:700;margin-top:6px;max-width:340px}
@@ -127,6 +131,17 @@
   .terms input{margin-top:3px;accent-color:var(--gold)}
   .terms a{color:var(--navy);font-weight:800;text-decoration:underline}
   .confirm-note{text-align:center;font-size:12px;color:var(--muted);margin-top:12px}
+  /* inline validation */
+  .fld.invalid,textarea.invalid{border-color:var(--error);background:var(--error-bg)}
+  .fld.invalid:focus,textarea.invalid:focus{border-color:var(--error);background:#fff}
+  .field-error{display:none;color:var(--error);font-size:11.5px;font-weight:700;letter-spacing:.01em;margin-top:-1px;text-transform:none}
+  .field-error.show{display:block}
+  label.has-error .field-error{display:block}
+  .terms.has-error label{color:var(--error)}
+  .form-alert{display:none;align-items:flex-start;gap:9px;background:var(--error-bg);border:1px solid rgba(194,59,50,.32);color:#8f241d;font-size:13px;font-weight:600;line-height:1.5;border-radius:10px;padding:11px 14px;margin-bottom:14px}
+  .form-alert.show{display:flex}
+  .form-alert b{font-weight:800}
+  .btn-gold:disabled{opacity:.62;cursor:not-allowed;filter:none}
   .trust{display:flex;align-items:center;gap:12px;color:var(--navy);font-weight:700;font-size:13px;letter-spacing:.02em;flex-wrap:wrap;justify-content:center}
   .trust i{width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block}
 
@@ -450,7 +465,7 @@
   justify-content:space-between;flex-wrap:wrap;gap:16px;
 }
 .airport-price-num{
-  font-family:'Anton';font-size:46px;color:var(--gold);line-height:1;
+  font-family:'Anton';font-size:46px;color:var(--gold-d);line-height:1;
 }
 .airport-price-num small{
   font-family:'Archivo';font-weight:800;font-size:15px;

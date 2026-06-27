@@ -124,13 +124,70 @@
   // Initialise EmailJS once
   if (window.emailjs) emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
-  document.getElementById('submitBtn').addEventListener('click', function(){
-    var required = document.querySelectorAll('.fld');
-    var missing = false;
-    required.forEach(function(f){ if (!f.value.trim()) missing = true; });
-    var terms = document.getElementById('terms').checked;
-    if (missing || !terms) {
-      alert('Please fill in your name, email, mobile and pickup details, and accept the terms before submitting.');
+  var submitBtn = document.getElementById('submitBtn');
+  var submitError = document.getElementById('submitError');
+  var termsRow = document.getElementById('terms-row');
+  var submitDefaultLabel = submitBtn.innerHTML;
+
+  var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  // UK mobile: 07xxxxxxxxx, or +447xxxxxxxxx / 00447... — ignore spaces
+  var phoneRe = /^(?:\+?44|0)7\d{9}$/;
+
+  // Map each field to its validator + error element
+  var fields = [
+    { el: document.getElementById('name-field'),   err: 'err-name',   test: function(v){ return v.length >= 2; } },
+    { el: document.getElementById('mobile-field'), err: 'err-mobile', test: function(v){ return phoneRe.test(v.replace(/[\s()-]/g, '')); } },
+    { el: document.getElementById('email-field'),  err: 'err-email',  test: function(v){ return emailRe.test(v); } },
+    { el: document.getElementById('pickup-field'), err: 'err-pickup', test: function(v){ return v.length >= 3; } }
+  ];
+
+  function setFieldError(f, show){
+    f.el.classList.toggle('invalid', show);
+    f.el.setAttribute('aria-invalid', show ? 'true' : 'false');
+    f.el.closest('label').classList.toggle('has-error', show);
+  }
+
+  // Clear a field's error as soon as the user corrects it
+  fields.forEach(function(f){
+    f.el.addEventListener('input', function(){
+      if (f.test(f.el.value.trim())) setFieldError(f, false);
+    });
+  });
+  document.getElementById('terms').addEventListener('change', function(){
+    if (this.checked) termsRow.classList.remove('has-error');
+  });
+
+  function validateForm(){
+    var firstInvalid = null;
+    fields.forEach(function(f){
+      var ok = f.test(f.el.value.trim());
+      setFieldError(f, !ok);
+      if (!ok && !firstInvalid) firstInvalid = f.el;
+    });
+    var termsOk = document.getElementById('terms').checked;
+    termsRow.classList.toggle('has-error', !termsOk);
+    if (!termsOk && !firstInvalid) firstInvalid = document.getElementById('terms');
+    return firstInvalid;
+  }
+
+  function showSubmitError(msg){
+    submitError.innerHTML = msg;
+    submitError.classList.add('show');
+  }
+  function clearSubmitError(){
+    submitError.classList.remove('show');
+  }
+  function setSending(on){
+    submitBtn.disabled = on;
+    submitBtn.innerHTML = on ? 'Sending…' : submitDefaultLabel;
+  }
+
+  submitBtn.addEventListener('click', function(){
+    clearSubmitError();
+    var firstInvalid = validateForm();
+    if (firstInvalid) {
+      firstInvalid.focus();
+      if (firstInvalid.scrollIntoView) firstInvalid.scrollIntoView({ behavior:'smooth', block:'center' });
       return;
     }
 
@@ -162,17 +219,17 @@
       reply_to         : email
     };
 
-    // 1 ── Email Alams Travel (business notification)
-    if (window.emailjs) {
-      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_BIZ, templateParams)
-        .catch(function(err){ console.warn('EmailJS biz send failed:', err); });
+    var confirmDetails = {
+      firstName : firstName,
+      vehicle   : names[v],
+      route     : 'Derby → ' + destLabel(),
+      tripType  : tripLabel,
+      date      : dateVal,
+      passengers: paxInput.value,
+      estimate  : priceEst
+    };
 
-      // 2 ── Email the customer (confirmation)
-      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_CUST, templateParams)
-        .catch(function(err){ console.warn('EmailJS customer send failed:', err); });
-    }
-
-    // 3 ── Silent WhatsApp notification to Alams Travel via Business Cloud API
+    // WhatsApp notification text (sent server-side in production — see note in config)
     var waMessage = [
       '🚐 *New Booking Request — Alams Travel*',
       '',
@@ -190,29 +247,47 @@
       (notes ? '📝 *Notes:* ' + notes : '')
     ].filter(Boolean).join('\n');
 
-    fetch('https://graph.facebook.com/v19.0/' + WA_PHONE_NUMBER_ID + '/messages', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + WA_ACCESS_TOKEN,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        to: WA_TO_NUMBER,
-        type: 'text',
-        text: { body: waMessage }
-      })
-    }).catch(function(err){ console.warn('WhatsApp API call failed:', err); });
+    function sendWhatsApp(){
+      return fetch('https://graph.facebook.com/v19.0/' + WA_PHONE_NUMBER_ID + '/messages', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + WA_ACCESS_TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messaging_product:'whatsapp', to:WA_TO_NUMBER, type:'text', text:{ body:waMessage } })
+      });
+    }
 
-    // 4 ── Show personalised confirmation popup
-    showConfirmPopup({
-      firstName : firstName,
-      vehicle   : names[v],
-      route     : 'Derby → ' + destLabel(),
-      tripType  : tripLabel,
-      date      : dateVal,
-      passengers: paxInput.value,
-      estimate  : priceEst
+    // Is the booking pipeline actually configured, or still on placeholder keys?
+    var emailReady = window.emailjs && EMAILJS_PUBLIC_KEY.indexOf('YOUR_') !== 0;
+    var waReady    = WA_ACCESS_TOKEN.indexOf('YOUR_') !== 0;
+
+    setSending(true);
+
+    // Demo/preview mode: nothing is wired up yet — show the confirmation so the
+    // page can be previewed, but don't pretend a real request was delivered.
+    if (!emailReady && !waReady) {
+      setSending(false);
+      showConfirmPopup(confirmDetails);
+      return;
+    }
+
+    // The business notification is the source of truth: only confirm to the
+    // customer once it has actually been accepted.
+    var primarySend = emailReady
+      ? emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_BIZ, templateParams)
+      : sendWhatsApp();
+
+    primarySend.then(function(){
+      // Fire the secondary, non-critical notifications (best effort)
+      if (emailReady) {
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_CUST, templateParams)
+          .catch(function(err){ console.warn('Customer email failed:', err); });
+        if (waReady) sendWhatsApp().catch(function(err){ console.warn('WhatsApp failed:', err); });
+      }
+      setSending(false);
+      showConfirmPopup(confirmDetails);
+    }).catch(function(err){
+      console.warn('Booking request failed:', err);
+      setSending(false);
+      showSubmitError('Sorry — we couldn\'t send your request just now. Please call or WhatsApp us on <b>07777 399135</b> and we\'ll sort it straight away.');
     });
   });
 

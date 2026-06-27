@@ -250,7 +250,7 @@
             </div>
           </div>
           <div class="field sm" id="miles-field" style="display:none">
-            <label for="miles">Miles (1-way)</label>
+            <label for="miles">Approx. miles</label>
             <div class="ctrl"><input type="number" id="miles" min="1" value="20"></div>
           </div>
           <div class="field">
@@ -271,7 +271,7 @@
         </div>
 
         <!-- Regular price display -->
-        <div class="price-out" id="price-out-wrap">
+        <div class="price-out" id="price-out-wrap" aria-live="polite">
           <div>
             <div class="price-num"><small>£</small><span id="price">35</span></div>
             <div class="price-break" id="breakdown">Derby → Nottingham · One way · 7–8 Seater MPV</div>
@@ -298,17 +298,19 @@
         <div class="card-title">Your details</div>
 
         <div class="form-grid">
-          <label><span>Full name</span><input class="fld" type="text" id="name-field" placeholder="Jane Smith"></label>
-          <label><span>Mobile number</span><input class="fld" type="tel" id="mobile-field" placeholder="07xxx xxxxxx"></label>
-          <label class="full"><span>Email address</span><input class="fld" type="email" id="email-field" placeholder="jane@email.com"></label>
-          <label class="full"><span>Pickup address / postcode</span><input class="fld" type="text" id="pickup-field" placeholder="e.g. DE1 2AB or full address"></label>
+          <label><span>Full name</span><input class="fld" type="text" id="name-field" placeholder="Jane Smith" autocomplete="name" aria-required="true"><span class="field-error" id="err-name">Please enter your name.</span></label>
+          <label><span>Mobile number</span><input class="fld" type="tel" id="mobile-field" placeholder="07xxx xxxxxx" autocomplete="tel" inputmode="tel" aria-required="true"><span class="field-error" id="err-mobile">Enter a valid UK mobile number.</span></label>
+          <label class="full"><span>Email address</span><input class="fld" type="email" id="email-field" placeholder="jane@email.com" autocomplete="email" inputmode="email" aria-required="true"><span class="field-error" id="err-email">Enter a valid email address.</span></label>
+          <label class="full"><span>Pickup address / postcode</span><input class="fld" type="text" id="pickup-field" placeholder="e.g. DE1 2AB or full address" autocomplete="street-address" aria-required="true"><span class="field-error" id="err-pickup">Please enter your pickup location.</span></label>
           <label class="full"><span>Anything we should know?</span><textarea id="notes-field" placeholder="Flight times, luggage, accessibility needs, child seats..."></textarea></label>
         </div>
 
-        <div class="terms">
+        <div class="terms" id="terms-row">
           <input type="checkbox" id="terms">
-          <label for="terms">I agree to Alams Travel's <a href="#">Terms &amp; Conditions</a> and <a href="#">Privacy Policy</a>.</label>
+          <label for="terms">I agree to Alams Travel's <a href="#">Terms &amp; Conditions</a> and <a href="#">Privacy Policy</a>.<span class="field-error" id="err-terms">Please accept the terms to continue.</span></label>
         </div>
+
+        <div class="form-alert" id="submitError" role="alert"></div>
 
         <button class="btn-gold" type="button" id="submitBtn">Request This Booking ›</button>
         <div class="confirm-note">We'll confirm your final price and availability within 2 hours (Mon–Sat, 8am–8pm).</div>
