@@ -1,16 +1,17 @@
 // Alams Travel — site interactions
 
 (function(){
-  var dests = ['NOTTINGHAM','BIRMINGHAM','LONDON'];
+  var dests = ['NOTTINGHAM','BIRMINGHAM','LONDON','MANCHESTER AIRPORT','LONDON HEATHROW'];
   var di = 0;
   var wordEl = document.getElementById('destWord');
   var pinEl = document.getElementById('pinDestName');
-  function titleCase(s){ return s.charAt(0) + s.slice(1).toLowerCase(); }
+  function titleCase(s){ return s.toLowerCase().replace(/\b\w/g, function(c){ return c.toUpperCase(); }); }
   setInterval(function(){
     wordEl.style.opacity = 0;
     setTimeout(function(){
       di = (di + 1) % dests.length;
       wordEl.textContent = dests[di];
+      wordEl.classList.toggle('long', dests[di].length > 11);
       pinEl.textContent = titleCase(dests[di]);
       wordEl.style.opacity = 1;
     }, 260);

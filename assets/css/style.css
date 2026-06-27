@@ -73,7 +73,8 @@
   .bigword{font-family:'Anton';font-weight:400;text-transform:uppercase;color:var(--gold);line-height:.84;letter-spacing:.01em}
   .heroA-head{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:4px}
   .kicker{font-weight:800;letter-spacing:.05em;font-size:32px;color:var(--navy);line-height:1;white-space:nowrap}
-  .heroA .bigword{font-size:88px;line-height:.92;padding-top:2px;text-shadow:0 3px 0 rgba(12,39,71,.07);transition:opacity .26s ease}
+  .heroA .bigword{font-size:88px;line-height:.92;padding-top:2px;text-shadow:0 3px 0 rgba(12,39,71,.07);transition:opacity .26s ease,font-size .26s ease;white-space:nowrap}
+  .heroA .bigword.long{font-size:52px;line-height:1.18}
   .subpill{display:inline-flex;align-items:center;gap:10px;background:var(--navy);color:#fff;font-weight:800;letter-spacing:.16em;font-size:19px;padding:10px 24px;border-radius:9px;text-transform:uppercase;white-space:nowrap}
   .feats{display:flex;align-items:center;gap:12px;color:var(--navy);font-weight:700;font-size:14px;letter-spacing:.03em;flex-wrap:wrap;justify-content:center}
   .feats i{width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block}
@@ -192,6 +193,7 @@
     .top-cta{font-size:12px;padding:8px 13px;align-self:stretch;justify-content:center}
     .kicker{font-size:19px}
     .heroA .bigword{font-size:46px}
+    .heroA .bigword.long{font-size:30px;line-height:1.15}
     .subpill{font-size:13px;padding:7px 15px;letter-spacing:.1em}
     .feats{font-size:11px;gap:7px}
     .tagline{font-size:12px;padding:7px 14px}
