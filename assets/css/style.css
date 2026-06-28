@@ -520,3 +520,42 @@
   .btab-arrow{display:none}
   .airport-price-note{text-align:left;max-width:none}
 }
+
+  /* ───────── Footer ───────── */
+  .site-footer{width:100%;background:var(--navy);color:#cdd8e6}
+  .ft-inner{max-width:1200px;margin:0 auto;padding:54px 34px 24px}
+  .ft-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1.4fr;gap:40px}
+  .ft-col{min-width:0}
+  .ft-brand{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .ft-mark{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-l));display:flex;align-items:center;justify-content:center;color:var(--navy);font-family:'Anton';font-size:23px;box-shadow:0 5px 16px rgba(245,166,35,.4);flex:none}
+  .ft-brand-name{font-weight:900;font-size:21px;letter-spacing:-.01em;line-height:1;color:#fff}
+  .ft-brand-name b{color:var(--gold-l);font-weight:900}
+  .ft-brand-name small{display:block;font-weight:700;font-size:9px;letter-spacing:.3em;color:#8aa0bb;margin-top:4px}
+  .ft-about{font-size:14px;line-height:1.6;color:#aebdd1;max-width:340px;margin:0 0 18px}
+  .ft-trust{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--gold-l);text-transform:uppercase}
+  .ft-trust i{width:4px;height:4px;border-radius:50%;background:var(--gold);display:inline-block}
+  .ft-head{margin:0 0 16px;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#fff}
+  .ft-links{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:11px}
+  .ft-links a{color:#aebdd1;text-decoration:none;font-size:14px;font-weight:600;transition:color .15s ease}
+  .ft-links a:hover{color:var(--gold-l)}
+  .ft-contact{display:flex;align-items:center;gap:10px;color:#dbe5f0;text-decoration:none;font-size:14.5px;font-weight:700;margin-bottom:12px;transition:color .15s ease}
+  .ft-contact:hover{color:var(--gold-l)}
+  .ft-ic{width:28px;height:28px;border-radius:50%;background:var(--gold);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:14px;flex:none}
+  .ft-ic-wa{background:#25d366;color:#073b22}
+  .ft-hours{font-size:13px;color:#8aa0bb;font-weight:600;margin:2px 0 18px}
+  .ft-cta{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--gold),var(--gold-l));color:var(--navy);font-weight:800;font-size:14px;text-decoration:none;padding:11px 20px;border-radius:11px;box-shadow:0 9px 20px rgba(245,166,35,.32);transition:transform .2s ease,box-shadow .2s ease}
+  .ft-cta:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(245,166,35,.45)}
+  .ft-bottom{margin-top:40px;padding-top:22px;border-top:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;font-size:13px;color:#8aa0bb}
+  .ft-legal{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .ft-legal a{color:#aebdd1;text-decoration:none;transition:color .15s ease}
+  .ft-legal a:hover{color:var(--gold-l)}
+  .ft-legal i{width:3px;height:3px;border-radius:50%;background:#5b6f8a;display:inline-block}
+  @media(max-width:880px){
+    .ft-grid{grid-template-columns:1fr 1fr;gap:32px}
+    .ft-brand-col{grid-column:1 / -1}
+  }
+  @media(max-width:560px){
+    .ft-inner{padding:40px 22px 22px}
+    .ft-grid{grid-template-columns:1fr;gap:28px}
+    .ft-bottom{flex-direction:column;align-items:flex-start}
+  }
