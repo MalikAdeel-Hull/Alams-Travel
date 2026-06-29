@@ -101,18 +101,21 @@
   });
 
   var todayStr = new Date().toISOString().split('T')[0];
+  var maxDate = new Date(Date.now() + 730 * 86400000).toISOString().split('T')[0];
   dateInput.min = todayStr;
-  // Hero widget's date field shares the same "no past dates" rule.
+  dateInput.max = maxDate;
+  // Hero widget's date field shares the same rules.
   var heroDateInput = document.getElementById('hero-date');
-  if (heroDateInput) heroDateInput.min = todayStr;
+  if (heroDateInput) { heroDateInput.min = todayStr; heroDateInput.max = maxDate; }
 
   // ─── CONFIGURATION ──────────────────────────────────────────────────────────
   // EmailJS — sign up free at https://www.emailjs.com/
-  // Then create two email templates and paste your IDs below.
-  var EMAILJS_PUBLIC_KEY   = 'YOUR_EMAILJS_PUBLIC_KEY';   // Account → API Keys
-  var EMAILJS_SERVICE_ID   = 'YOUR_SERVICE_ID';            // Email Services tab
-  var EMAILJS_TEMPLATE_BIZ = 'YOUR_BIZ_TEMPLATE_ID';      // Template that emails YOU (Alams Travel)
-  var EMAILJS_TEMPLATE_CUST= 'YOUR_CUSTOMER_TEMPLATE_ID'; // Template that emails the CUSTOMER
+  // Then create email templates and paste your IDs below.
+  var EMAILJS_PUBLIC_KEY      = 'YOUR_EMAILJS_PUBLIC_KEY';      // Account → API Keys
+  var EMAILJS_SERVICE_ID      = 'YOUR_SERVICE_ID';               // Email Services tab
+  var EMAILJS_TEMPLATE_BIZ    = 'YOUR_BIZ_TEMPLATE_ID';         // Template that emails YOU (Alams Travel) — minibus bookings
+  var EMAILJS_TEMPLATE_CUST   = 'YOUR_CUSTOMER_TEMPLATE_ID';    // Template that emails the CUSTOMER
+  var EMAILJS_TEMPLATE_CALLBACK = 'YOUR_CALLBACK_TEMPLATE_ID';  // Template for Wedding/Corporate/Events callback requests
 
   // WhatsApp Business Cloud API — set up at https://developers.facebook.com/docs/whatsapp/cloud-api
   // You need a Meta Business account, a verified WhatsApp Business number, and a permanent token.
@@ -130,8 +133,8 @@
   var submitDefaultLabel = submitBtn.innerHTML;
 
   var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  // UK mobile: 07xxxxxxxxx, or +447xxxxxxxxx / 00447... — ignore spaces
-  var phoneRe = /^(?:\+?44|0)7\d{9}$/;
+  // Accepts UK mobiles (07xxx / +447xxx) and any international number with 7+ digits
+  var phoneRe = /^[\d\s\+\-\(\)]{7,}$/;
 
   // Map each field to its validator + error element
   var fields = [
@@ -296,7 +299,7 @@
     document.getElementById('aqName').textContent = d.firstName;
 
     var dateDisplay = d.date
-      ? new Date(d.date).toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+      ? new Date(d.date + 'T12:00:00').toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
       : 'TBC';
 
     var rows = [
@@ -380,8 +383,16 @@
 (function(){
   var t=document.getElementById('navToggle'), l=document.getElementById('navLinks');
   if(t&&l){
-    t.addEventListener('click',function(){t.classList.toggle('open');l.classList.toggle('open');});
-    l.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){t.classList.remove('open');l.classList.remove('open');});});
+    t.addEventListener('click',function(){
+      var open = t.classList.toggle('open');
+      l.classList.toggle('open', open);
+      t.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    l.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){
+      t.classList.remove('open');
+      l.classList.remove('open');
+      t.setAttribute('aria-expanded','false');
+    });});
   }
 })();
 
@@ -441,14 +452,46 @@
   });
 })();
 
-// ── Callback popup (Wedding / Corporate) ────────────────────────────────────
+// ── Callback popup (Wedding / Corporate / Events) ───────────────────────────
 (function(){
+
+  // Shared phone regex (same as minibus form)
+  var cbPhoneRe = /^[\d\s\+\-\(\)]{7,}$/;
+
+  function setCallbackError(inputEl, show, msg){
+    var errEl = inputEl.parentElement.querySelector('.cb-error');
+    inputEl.classList.toggle('invalid', show);
+    if(errEl){ errEl.textContent = msg || ''; errEl.style.display = show ? 'block' : 'none'; }
+  }
+
+  // Inject error spans once (they sit after the input inside the label)
+  function ensureErrorSpan(inputEl){
+    if(!inputEl.parentElement.querySelector('.cb-error')){
+      var span = document.createElement('span');
+      span.className = 'cb-error field-error';
+      inputEl.parentElement.appendChild(span);
+    }
+  }
+
+  // Validate a single callback form; returns true if valid
+  function validateCallback(fields){
+    var ok = true;
+    fields.forEach(function(f){
+      ensureErrorSpan(f.el);
+      var val = f.el.tagName === 'SELECT' ? f.el.value : f.el.value.trim();
+      var valid = f.test(val);
+      setCallbackError(f.el, !valid, f.msg);
+      if(!valid) ok = false;
+    });
+    return ok;
+  }
+
   function showCallbackPopup(name, place, date, type){
     var firstName = name.split(' ')[0];
     document.getElementById('aqName').textContent = firstName;
     document.querySelector('#aqOverlay .aq-sub').textContent = 'Your enquiry has been received. Here\'s what happens next:';
     var dateDisplay = date
-      ? new Date(date).toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+      ? new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
       : '';
     document.getElementById('aqSummary').innerHTML =
       '<div class="aq-row"><span class="aq-label">Type</span><span class="aq-val">' + type + ' Booking</span></div>' +
@@ -465,34 +508,95 @@
     overlay.onclick = function(e){ if(e.target === overlay){ overlay.classList.remove('open'); document.body.style.overflow = ''; } };
   }
 
+  // Shared send + show logic for all three callback forms
+  function submitCallback(btn, params, name, place, date, type){
+    var cbEmailReady = window.emailjs && typeof EMAILJS_TEMPLATE_CALLBACK !== 'undefined' && EMAILJS_TEMPLATE_CALLBACK.indexOf('YOUR_') !== 0;
+    var origLabel = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Sending…';
+
+    function finish(){
+      btn.disabled = false;
+      btn.innerHTML = origLabel;
+      showCallbackPopup(name, place, date, type);
+    }
+    function fail(){
+      btn.disabled = false;
+      btn.innerHTML = origLabel;
+      // Surface error near the button
+      var errEl = btn.parentElement.querySelector('.cb-submit-error');
+      if(!errEl){
+        errEl = document.createElement('p');
+        errEl.className = 'cb-submit-error';
+        errEl.style.cssText = 'color:#c23b32;font-size:13px;font-weight:700;margin-top:10px;';
+        btn.parentElement.insertBefore(errEl, btn.nextSibling);
+      }
+      errEl.textContent = 'Sorry — couldn\'t send your request. Please call or WhatsApp us on 07777 399135.';
+    }
+
+    if(!cbEmailReady){ finish(); return; }
+
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_CALLBACK, params)
+      .then(finish)
+      .catch(function(err){ console.warn('Callback email failed:', err); fail(); });
+  }
+
+  // ── Wedding ──
   var wBtn = document.getElementById('weddingSubmitBtn');
-  if(wBtn) wBtn.addEventListener('click', function(){
-    var name  = document.getElementById('wedding-name').value.trim();
-    var phone = document.getElementById('wedding-phone').value.trim();
-    var place = document.getElementById('wedding-place').value.trim();
-    var date  = document.getElementById('wedding-date').value;
-    if(!name || !phone || !place){ alert('Please fill in your name, phone number and venue before submitting.'); return; }
-    showCallbackPopup(name, place, date, 'Wedding');
-  });
+  if(wBtn){
+    var wFields = [
+      { el: document.getElementById('wedding-name'),  test: function(v){ return v.length >= 2; },            msg: 'Please enter your name.' },
+      { el: document.getElementById('wedding-phone'), test: function(v){ return cbPhoneRe.test(v.replace(/[\s()-]/g,'')); }, msg: 'Please enter a valid phone number.' },
+      { el: document.getElementById('wedding-place'), test: function(v){ return v.length >= 2; },            msg: 'Please enter your venue.' }
+    ];
+    wFields.forEach(function(f){ f.el.addEventListener('input', function(){ ensureErrorSpan(f.el); if(f.test(f.el.value.trim())) setCallbackError(f.el, false); }); });
+    wBtn.addEventListener('click', function(){
+      if(!validateCallback(wFields)) return;
+      var name  = document.getElementById('wedding-name').value.trim();
+      var phone = document.getElementById('wedding-phone').value.trim();
+      var place = document.getElementById('wedding-place').value.trim();
+      var date  = document.getElementById('wedding-date').value;
+      submitCallback(wBtn, { booking_type:'Wedding', customer_name:name, customer_mobile:phone, venue:place, travel_date:date||'Not specified' }, name, place, date, 'Wedding');
+    });
+  }
 
+  // ── Corporate ──
   var cBtn = document.getElementById('corpSubmitBtn');
-  if(cBtn) cBtn.addEventListener('click', function(){
-    var name  = document.getElementById('corp-name').value.trim();
-    var phone = document.getElementById('corp-phone').value.trim();
-    var place = document.getElementById('corp-place').value.trim();
-    var date  = document.getElementById('corp-date').value;
-    if(!name || !phone || !place){ alert('Please fill in your name, phone number and destination before submitting.'); return; }
-    showCallbackPopup(name, place, date, 'Corporate');
-  });
+  if(cBtn){
+    var cFields = [
+      { el: document.getElementById('corp-name'),  test: function(v){ return v.length >= 2; },            msg: 'Please enter your name.' },
+      { el: document.getElementById('corp-phone'), test: function(v){ return cbPhoneRe.test(v.replace(/[\s()-]/g,'')); }, msg: 'Please enter a valid phone number.' },
+      { el: document.getElementById('corp-place'), test: function(v){ return v.length >= 2; },            msg: 'Please enter the destination or venue.' }
+    ];
+    cFields.forEach(function(f){ f.el.addEventListener('input', function(){ ensureErrorSpan(f.el); if(f.test(f.el.value.trim())) setCallbackError(f.el, false); }); });
+    cBtn.addEventListener('click', function(){
+      if(!validateCallback(cFields)) return;
+      var name  = document.getElementById('corp-name').value.trim();
+      var phone = document.getElementById('corp-phone').value.trim();
+      var place = document.getElementById('corp-place').value.trim();
+      var date  = document.getElementById('corp-date').value;
+      submitCallback(cBtn, { booking_type:'Corporate', customer_name:name, customer_mobile:phone, venue:place, travel_date:date||'Not specified' }, name, place, date, 'Corporate');
+    });
+  }
 
+  // ── Events ──
   var eBtn = document.getElementById('eventsSubmitBtn');
-  if(eBtn) eBtn.addEventListener('click', function(){
-    var name  = document.getElementById('events-name').value.trim();
-    var phone = document.getElementById('events-phone').value.trim();
-    var type  = document.getElementById('events-type').value;
-    var place = document.getElementById('events-place').value.trim();
-    var date  = document.getElementById('events-date').value;
-    if(!name || !phone || !place){ alert('Please fill in your name, phone number and destination before submitting.'); return; }
-    showCallbackPopup(name, place, date, type || 'Event');
-  });
+  if(eBtn){
+    var eFields = [
+      { el: document.getElementById('events-name'),  test: function(v){ return v.length >= 2; },            msg: 'Please enter your name.' },
+      { el: document.getElementById('events-phone'), test: function(v){ return cbPhoneRe.test(v.replace(/[\s()-]/g,'')); }, msg: 'Please enter a valid phone number.' },
+      { el: document.getElementById('events-place'), test: function(v){ return v.length >= 2; },            msg: 'Please enter your destination.' }
+    ];
+    eFields.forEach(function(f){ f.el.addEventListener('input', function(){ ensureErrorSpan(f.el); if(f.test(f.el.value.trim())) setCallbackError(f.el, false); }); });
+    eBtn.addEventListener('click', function(){
+      if(!validateCallback(eFields)) return;
+      var name  = document.getElementById('events-name').value.trim();
+      var phone = document.getElementById('events-phone').value.trim();
+      var type  = document.getElementById('events-type').value;
+      var place = document.getElementById('events-place').value.trim();
+      var date  = document.getElementById('events-date').value;
+      submitCallback(eBtn, { booking_type: type||'Event', customer_name:name, customer_mobile:phone, venue:place, travel_date:date||'Not specified' }, name, place, date, type||'Event');
+    });
+  }
+
 })();
